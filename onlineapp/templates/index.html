@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html>
+<head>
+    {% load static %}
+    <!--Import Google Icon Font-->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <!--Import materialize.css-->
+    <link type="text/css" rel="stylesheet" href='{% static "css/materialize.css" %}' media="screen,projection"/>
+
+    <!--Let browser know website is optimized for mobile-->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <style>
+        .label{
+        color:
+        }
+        .material-icons{cursor:pointer;}
+    </style>
+</head>
+<body>
+<!--Import jQuery before materialize.js-->
+<script type="text/javascript" src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
+<!--<script type="text/javascript" src='{% static "js/jquery-2.1.1.min.js" %}'></script>-->
+<!--<script type="text/javascript" src='{% static "js/jquery.tmpl.min.js" %}'></script>-->
+<script type="text/javascript" src="http://ajax.microsoft.com/ajax/jquery.templates/beta1/jquery.tmpl.min.js"></script>
+<script type="text/javascript" src='{% static "js/materialize.js" %}'></script>
+<script type="text/javascript">
+          $( document ).ready(function() {
+
+            getallcards();
+            $('.chips-autocomplete').material_chip({
+                autocompleteOptions: {
+                  data: {
+                    'Apple': null,
+                    'Microsoft': null,
+                    'Google': null
+                  },
+                  limit: Infinity,
+                  minLength: 1
+                }
+              });
+
+           });
+           function getallcards(){
+               $("#Heading").html("All Cards");
+               $("#menus li").removeClass("active");
+               $("#allcards").addClass("active");
+               $.get("cards",function(data,status){
+                    console.log(data);
+                    displayAllCards(data);
+                    $("#mainContent .myv").remove();
+                });
+            }
+           function getMycards(){
+               $("#Heading").html("My Cards");
+               $("#menus li").removeClass("active");
+               $("#mycards").addClass("active");
+               $.get("mycards",function(data,status){
+                    console.log(data);
+
+
+                    displayAllCards(data);
+
+                });
+           }
+          function displayAllCards(cards){
+              console.log( "ready!" );
+                  var templ=$("#cardTemplate").html();
+                  $.template( "cardslist", markup );
+
+
+                var markup = "<li><b>${Name}</b> (${ReleaseYear})</li>";
+                $.template( "cardslist", templ );
+                $("#mainContent .col").remove();
+                $.tmpl( "cardslist", cards ).appendTo( "#mainContent" );
+
+          }
+          function saveorUpdate(){
+          var cardobj={};
+          var urlt='addcard/';
+           if($("#cardId").val() > 0){
+           urlt='editcard/'+$("#cardId").val()+'/';
+           }
+
+
+          cardobj.title=$("#title_c").val();
+          cardobj.description=$("#description_c").val();
+          var tags= $('.chips-autocomplete').material_chip('data');
+            var tagarry=tags.map(function(obj) { return obj.tag;});
+
+          cardobj.tags=tagarry;
+          console.log(JSON.stringify (cardobj));
+           $.ajax({
+                type: 'POST',
+                url: urlt,
+                data: JSON.stringify (cardobj),
+                success: function(data) {
+                 console.log(data);
+                 getMycards();
+                 },
+                contentType: "application/json",
+                dataType: 'json'
+            });
+
+          }
+          function opennewcardForm(cid){
+          if(cid==0){
+          $("#newcardTitle").html("New Card");
+          $('#modal1').modal('open');
+          }
+          else{
+          $("#newcardTitle").html("Update Card");
+           $.get("editcard/"+cid+"/",function(data,status){
+                console.log(data);
+                $("#title_c").val(data.title);
+                $("#description_c").val(data.description);
+                $("#cardId").val(cid);
+                var etags=data.tags.map(function(obj){
+                var ob={};
+                ob.tag=obj;
+                return ob;
+                });
+                $('.chips-autocomplete').material_chip({
+                data:etags,
+                autocompleteOptions: {
+                  data: {
+                    'Apple': null,
+                    'Microsoft': null,
+                    'Google': null
+                  },
+                  limit: Infinity,
+                  minLength: 1
+                }
+              });
+
+            $('#modal1').modal('open');
+            });
+          }
+          }
+
+        function deleteCard(cid){
+        $.get("delcard/"+cid+"/",function(data,status){
+             $("#card_"+cid).remove();
+           });
+
+        }
+
+</script>
+<nav>
+    <div class="nav-wrapper blue">
+        <a href="#!" class="brand-logo"><i class="material-icons">cloud</i>Get IT ALL!</a>
+        <ul id="menus" class="right hide-on-med-and-down">
+            <li id="allcards"><a onclick="getallcards()" >All Cards</a></li>
+            <li id="mycards"><a onclick="getMycards()">My Cards</a></li>
+            <li><a  onclick="opennewcardForm(0);">Post Your Card</a></li>
+            <li><a ><i class="material-icons">se1arch</i></a></li>
+            <li><a><i class="material-icons">view_module</i></a></li>
+            <li><a><i class="material-icons">refresh</i></a></li>
+            <li><a><i class="material-icons">more_vert</i></a></li>
+        </ul>
+    </div>
+</nav>
+<div class="row" id="mainContent">
+    <h4 id="Heading" style="padding-left:10px"></h4>
+
+</div>
+<div class="row" id="cardTemplate" style="display:none">
+    {% verbatim %}
+    <div id="card_${id}" class="col offset-s2 s8 ">
+
+        <div class="card horizontal">
+            <div class="card-image activator">
+                <img src="https://lorempixel.com/100/190/nature/6">
+            </div>
+            <div class="card-content" style="width:100%">
+                <span class="card-title grey-text text-darken-4"><span class="activator">${title}</span><i class="myv material-icons right" onclick="deleteCard(${id})">delete</i><i class="myv material-icons right" onclick="opennewcardForm(${id})">mode_edit</i><i class=" activator material-icons right">more_vert</i></span>
+               <div style="padding:10px;font-size:16px" class="descrip">${description}</div>
+               <div class="right">
+                   <span class="label">Posted By </span> <span class="brown-text">${user_name}</span>
+
+                </div>
+            </div>
+            <div class="card-reveal">
+                <span class="card-title blue-text text-darken-4">${title}<i
+                        class="material-icons right">close</i></span>
+
+                <div style="padding:10px;font-size:16px" class="descrip">${description}
+
+                    <br>
+                    {{each(i, tag) tags}}
+                    <div class="chip">
+                        ${tag}
+                    </div>
+                    {{/each}}
+
+                    <div class="right">
+                       <span class="blue-text">Posted By </span>  <span class="brown-text">${user_name}</span><br>
+                        <span class="blue-text">Email Id </span> <span>${user_email}</span><br>
+                        <span class="blue-text">Posted On </span> <span>${modified_time}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endverbatim %}
+</div>
+
+  <!-- Modal Structure -->
+  <div id="modal1" class="modal modal-fixed-footer">
+
+    <div class="modal-content">
+      <h4 id="newcardTitle">New Card</h4>
+      <div class="row">
+        <form id="cardfrm" class="col s12">
+          <div class="row">
+            <div class="input-field col s6">
+              <input placeholder="Title" id="title_c" name="title" type="text" class="validate">
+              <input placeholder="Title" id="cardId" name="id" type="hidden"  value="">
+              <label for="title_c">Title</label>
+            </div>
+            <div class=" col s8">
+                 <label >Description</label>
+              <textarea id="description_c" name="description" class="materialize-textarea"></textarea>
+
+            </div>
+          </div>
+            <div class="row">
+                <label >Tags</label>
+                <div class="chips chips-autocomplete"></div>
+            </div>
+
+        </form>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <a href="#!" id="saveBtn" onclick="saveorUpdate()" class="modal-action modal-close waves-effect waves-green btn-flat ">Post</a>
+    </div>
+  </div>
+</body>
+</html>
