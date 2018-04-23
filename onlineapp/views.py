@@ -153,5 +153,8 @@ class Search_card(APIView):
             # tag_card=Card.objects.get(tags=k)
             # tag_result=CardSerializer(tag_card,many=True)
 
+def Register(request):
+    return render(request, "registration/register.html")
+
 
 

@@ -15,5 +15,7 @@ url(r'^getcard/(?P<pk>\d+)/$', views.Get_card.as_view(), name="get_card_id"),
 url(r'^editcard/(?P<pk>\d+)/$',  csrf_exempt(views.Edit_card.as_view()), name="edit_card_id"),
 url(r'^delcard/(?P<pk>\d+)/$', views.Delete_card.as_view(), name="delete_card_id"),
 url(r'^searchcard/$', views.Search_card.as_view(), name="search_card"),
+url(r'^register/$', views.Register, name="register"),
+
 
 ]
